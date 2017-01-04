@@ -1,6 +1,10 @@
 # scrapWind
+This is a simple scraping scripng used for show a 24 hour timeserie of data in http://seadog.ddns.net:800/rapporter/BSS.htm and it will show up on https://app.ubidots.com/ubi/public/getdashboard/page/kgHXr7swwIDPf0JdIYW_iOltvb4/#/ 
 
-** How to run it **
+## Preparations ##
+Create an account on https://www.ubidots.com and create a source. Edit config.yaml and add source and token for the account.
+
+## How to run it ##
 virtualenv env
 source env/bin/activate
 
@@ -18,7 +22,7 @@ env/
 Inactivate the virtualenv with command:
 deactivate
 
-** Run it as Lambda on AWS **
+## Run it as Lambda on AWS ##
 Sign up with AWS and create an account with Access Key.
 Create IAM role. I named it Lambda1. Copy its ARN and use it when you create the lambda function.
 aws configure      # Learn more: http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html 
@@ -30,7 +34,7 @@ aws lambda create-function --region eu-west-1 --function-name scrapWind --zip-fi
 After the lambda is created you can updated like:
 bash deployLambda.sh scrapWind
 
-Create a scheduler as in step 2 in http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/RunLambdaSchedule.html with 
+Create a scheduler as in step 2 in http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/RunLambdaSchedule.html 
 
 Now the AWS CloudWatch rule scheduler will trigger the lambda script 
 
