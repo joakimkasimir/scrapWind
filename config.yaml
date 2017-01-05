@@ -1,8 +1,10 @@
+# scrapWind configuration
+borstahusenspir_url: 'http://seadog.ddns.net:800/rapporter/BSS.htm'
+
+ubidots_update: 'False'
 # Set token from your account on https://app.ubidots.com/
 #ubidots_token: 'BVrR0T9XzMYnOTXWjSm8GH6vuDejLa'
-
 ubidots_urlprefix: 'https://things.ubidots.com'
-
 ubidots_source: 'datadog'
 
-borstahusenspir_url: 'http://seadog.ddns.net:800/rapporter/BSS.htm'
+

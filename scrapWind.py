@@ -56,13 +56,17 @@ def scrape(config, update=False):
         rc = requests.post(config['ubidots_urlprefix']+'/api/v1.6/devices/'+config['ubidots_source']+'/?token='+config['ubidots_token'], headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
         print rc
         print rc.content
+#        print json.dumps(payload)
     else:
         print json.dumps(payload)
 
 
 def lambda_handler(event, context):
     config = loadConfig(filename='config.yaml')
-    scrape(config, update=True)
+    if config['ubidots_update'] == 'True':
+        scrape(config, update=True)
+    else:
+        scrape(config, update=False)
 
 if __name__ == '__main__':
     lambda_handler(False, False)
