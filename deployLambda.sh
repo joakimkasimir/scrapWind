@@ -24,4 +24,4 @@ zip -r ${VIRTUAL_ENV}/../${1}.zip *
 
 cd ${VIRTUAL_ENV}/.. && rm -r ${tempDir}
 
-aws lambda update-function-code --function-name ${1} --zip-file fileb://./${1}.zip
+aws lambda update-function-code --region eu-west-1 --function-name ${1} --zip-file fileb://./${1}.zip
