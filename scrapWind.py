@@ -18,7 +18,7 @@ def scrape(config, update=False):
     kollaDessaClasser = {'storhetClassName': 'Kol_tx_storhet', 'medelClassName': 'Kol_tx_medel', 'minClassName': 'Kol_tx_mi', 'maxClassName': 'Kol_tx_ma'}
     typeName = {'Kol_tx_medel': '_medel', 'Kol_tx_mi': '_min', 'Kol_tx_ma': '_max'}
 #    seaLevelLocations = {'Barseback': 2099, 'Viken': 2228, 'Klagshamn': 2228, 'Skanor': 30488, 'Ystad': 2093}
-    seaLevelLocations = {'Barseback': 2099, 'Viken': 2228, 'Klagshamn': 2228, 'Skanor': 30488}
+    seaLevelLocations = {'Barseback': 2099, 'Viken': 2228, 'Klagshamn': 2095, 'Skanor': 30488}
 
     response = requests.get(config['borstahusenspir_url'])
     timestamp = int(time.time())*1000 # Milliseconds since 1970
