@@ -12,13 +12,11 @@ def loadConfig(filename='config.yaml'):
 #    print 'yaml:', yaml.dump(yaml.load(content))
     return yaml.load(content)
 
-def scrape(config, update=False):
+def scrapeDataDog(config, update=False):
     datan = []
     payload = {}
     kollaDessaClasser = {'storhetClassName': 'Kol_tx_storhet', 'medelClassName': 'Kol_tx_medel', 'minClassName': 'Kol_tx_mi', 'maxClassName': 'Kol_tx_ma'}
     typeName = {'Kol_tx_medel': '_medel', 'Kol_tx_mi': '_min', 'Kol_tx_ma': '_max'}
-#    seaLevelLocations = {'Barseback': 2099, 'Viken': 2228, 'Klagshamn': 2228, 'Skanor': 30488, 'Ystad': 2093}
-    seaLevelLocations = {'Barseback': 2099, 'Viken': 2228, 'Klagshamn': 2095, 'Skanor': 30488}
 
     response = requests.get(config['borstahusenspir_url'])
     timestamp = int(time.time())*1000 # Milliseconds since 1970
@@ -51,36 +49,52 @@ def scrape(config, update=False):
                 try:
                     payload[unit['Kol_tx_storhet'].replace(' ','_')+n] = {'value': unit[t], 'timestamp': timestamp, 'context': {'lat': 55.894468, 'lng': 12.799568}}
                 except (KeyError) as e:
-                    pass
+                    print "Fel DataDog:", e
+#    print json.dumps(payload)
+    if update:
+        if len(payload):
+            rc = requests.post(config['ubidots_urlprefix']+'/api/v1.6/devices/'+config['ubidots_source']+'/?token='+config['ubidots_token'], headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
+#            print rc
+            print rc.content
+        else:
+            print "No dataDog data collected"
+    else:
+        print json.dumps(payload)
 
+################################################################
+
+def scrapeSMHI(config, update=False):
+#    seaLevelLocations = {'Barseback': 2099, 'Viken': 2228, 'Klagshamn': 2228, 'Skanor': 30488, 'Ystad': 2093}
+    seaLevelLocations = {'Barseback': 2099, 'Viken': 2228, 'Klagshamn': 2095, 'Skanor': 30488}
     vattenPayload = {}
     for key, value in seaLevelLocations.iteritems():
 
         headers = {'Content-type': 'application/json'}
         url = "http://opendata-download-ocobs.smhi.se/api/version/latest/parameter/6/station/"+str(value)+"/period/latest-hour/data.json"
-        response = requests.get(url, headers=headers)
-        responseData = response.json()
-        vattenPayload[key+'_sea_level'] = {'value': responseData['value'][0]['value'], 'timestamp': responseData['value'][0]['date'], 'context': {'lat': responseData['position'][0]['latitude'], 'lng': responseData['position'][0]['longitude']}}
+        try:
+            response = requests.get(url, headers=headers)
+            responseData = response.json()
+            vattenPayload[key+'_sea_level'] = {'value': responseData['value'][0]['value'], 'timestamp': responseData['value'][0]['date'], 'context': {'lat': responseData['position'][0]['latitude'], 'lng': responseData['position'][0]['longitude']}}
 
-#    print json.dumps(payload)
+        except (ValueError) as e:
+            print "Fel SMHI:", e
+#    print json.dumps(vattenPayload)
     if update:
-        rc = requests.post(config['ubidots_urlprefix']+'/api/v1.6/devices/'+config['ubidots_source']+'/?token='+config['ubidots_token'], headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
-        print rc
-        print rc.content
-        rc = requests.post(config['ubidots_urlprefix']+'/api/v1.6/devices/'+'smhi'+'/?token='+config['ubidots_token'], headers={'Content-Type': 'application/json'}, data=json.dumps(vattenPayload))
-        print rc
-        print rc.content
+        if len(vattenPayload) != 0:
+            rc = requests.post(config['ubidots_urlprefix']+'/api/v1.6/devices/'+'smhi'+'/?token='+config['ubidots_token'], headers={'Content-Type': 'application/json'}, data=json.dumps(vattenPayload))
+#            print rc
+            print rc.content
+        else:
+            print "No SMHI data collected."
     else:
-        print json.dumps(payload)
         print json.dumps(vattenPayload)
 
+###############################################################
 
 def lambda_handler(event, context):
     config = loadConfig(filename='config.yaml')
-    if config['ubidots_update'] == 'True':
-        scrape(config, update=True)
-    else:
-        scrape(config, update=False)
+    scrapeDataDog(config, update=config['ubidots_update'])
+    scrapeSMHI(config, update=config['ubidots_update'])
 
 if __name__ == '__main__':
     lambda_handler(False, False)
