@@ -1,6 +1,8 @@
 # scrapWind
 This is a simple scraping scripng used for show a 24 hour timeserie of data in http://seadog.ddns.net:800/rapporter/BSS.htm and it will show up on https://app.ubidots.com/ubi/public/getdashboard/page/kgHXr7swwIDPf0JdIYW_iOltvb4/#/ 
 
+It also gets sea level from SMHI open data api: http://opendata-catalog.smhi.se/explore/ 
+
 ## Preparations ##
 Create an account on https://www.ubidots.com and create a source. Edit config.yaml and add source and token for the account.
 
