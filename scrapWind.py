@@ -4,6 +4,7 @@ import requests
 import time
 import json
 import yaml
+from beebotte import *
 
 def loadConfig(filename='config.yaml'):
     with open(filename) as fh:
@@ -12,7 +13,20 @@ def loadConfig(filename='config.yaml'):
 #    print 'yaml:', yaml.dump(yaml.load(content))
     return yaml.load(content)
 
-def scrapeDataDog(config, update=False):
+################################################################
+
+def beebotte_write(config, payload):
+    bclient = BBT(config['beebotte']['api_key'], config['beebotte']['secret_key'])
+
+    for resource in payload:
+        print "BBT Resource: ", resource, payload[resource]['value'], type(payload[resource]['value'])
+        bclient.write('Borstahusen_data', resource, payload[resource]['value'])
+    
+#    res1 = Resource(bclient, 'Borstahusen_data', 'Vindhastighet_medel')
+#    res1.write(11.0)
+################################################################
+
+def scrapeDataDog(config, update="False"):
     datan = []
     payload = {}
 #    kollaDessaClasser = {'storhetClassName': 'Kol_tx_storhet', 'medelClassName': 'Kol_tx_medel', 'minClassName': 'Kol_tx_mi', 'maxClassName': 'Kol_tx_ma'}
@@ -44,6 +58,7 @@ def scrapeDataDog(config, update=False):
                         datan[row]['enhet'] = allColumns[column].get_text().split()[1]
 
     for unit in datan:
+#        print "Unit: ", unit
         if config['borstahusenspir']['kollaDessaClasser']['storhetClassName'] in unit:
             for t, n in config['borstahusenspir']['typeName'].iteritems():
                 try:
@@ -51,7 +66,14 @@ def scrapeDataDog(config, update=False):
                 except (KeyError) as e:
                     print "Fel DataDog:", e
 #    print json.dumps(payload)
-    if update:
+    if config['beebotte']['update'] == "True":
+        if len(payload) != 0:
+            beebotte_write(config, payload)
+        else:
+            print "No data data collected for Beebotte."
+
+    if config['ubidots']['update'] == "True":
+#        print "Update Ubidots: ", update, type(update)
         if len(payload):
             rc = requests.post(config['ubidots']['urlprefix']+'/api/v1.6/devices/'+config['ubidots']['datadog_source']+'/?token='+config['ubidots']['token'], headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
 #            print rc
@@ -59,11 +81,11 @@ def scrapeDataDog(config, update=False):
         else:
             print "No dataDog data collected"
     else:
-        print json.dumps(payload)
+        print "payload: ", json.dumps(payload)
 
 ################################################################
 
-def scrapeSMHI(config, update=False):
+def scrapeSMHI(config, update="False"):
 #    seaLevelLocations = {'Barseback': 2099, 'Viken': 2228, 'Klagshamn': 2095, 'Skanor': 30488}
     vattenPayload = {}
     for key, value in config['smhi']['seaLevelLocations'].iteritems():
@@ -78,7 +100,7 @@ def scrapeSMHI(config, update=False):
         except (ValueError) as e:
             print "Fel SMHI:", e
 #    print json.dumps(vattenPayload)
-    if update:
+    if config['ubidots']['update'] == "True":
         if len(vattenPayload) != 0:
             rc = requests.post(config['ubidots']['urlprefix']+'/api/v1.6/devices/'+config['ubidots']['smhi_source']+'/?token='+config['ubidots']['token'], headers={'Content-Type': 'application/json'}, data=json.dumps(vattenPayload))
 #            print rc
@@ -92,10 +114,8 @@ def scrapeSMHI(config, update=False):
 
 def lambda_handler(event, context):
     config = loadConfig(filename='config.yaml')
-    print json.dumps(config)
-#    exit()
-    scrapeDataDog(config, update=config['ubidots']['update'])
-    scrapeSMHI(config, update=config['ubidots']['update'])
+    scrapeDataDog(config)
+    scrapeSMHI(config)
 
 if __name__ == '__main__':
     lambda_handler(False, False)
