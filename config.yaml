@@ -1,7 +1,10 @@
+### Log levels: (less) CRITICAL, ERROR, WARNING, INFO, DEBUG (more)
+loglevel: WARNING
+
 beebotte:
         ### Set api key from your account
-        api_key: 'b703f233d5d5de2f907e43122863547290cb'
-        secret_key: '9b86c1e53907e43122863547290cb7907e43122863547290cb907e431228635472'
+        api_key: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+        secret_key: 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
 
         datadog_source: 'datadog'
         smhi_source: smhi
@@ -10,7 +13,7 @@ beebotte:
 
 ubidots:
         ### Set token from your account on https://app.ubidots.com/
-        token: 'mVkR0X9XzMYn907e43122863547290cb'
+        token: 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ'
 
         urlprefix: 'https://things.ubidots.com'
 

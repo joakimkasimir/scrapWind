@@ -1,15 +1,18 @@
 #!/usr/bin/python
+from __future__ import print_function
+import sys
 from bs4 import BeautifulSoup
 import requests
 import time
 import json
 import yaml
 from beebotte import *
+import logging
 
 def loadConfig(filename='config.yaml'):
     with open(filename) as fh:
         content = fh.read()
-#    print content
+    logging.debug("configuration: "+content)
 #    print 'yaml:', yaml.dump(yaml.load(content))
     return yaml.load(content)
 
@@ -19,9 +22,9 @@ def beebotte_write(config, payload):
     bclient = BBT(config['beebotte']['api_key'], config['beebotte']['secret_key'])
 
     for resource in payload:
-        print "BBT Resource: ", resource, payload[resource]['value'], type(payload[resource]['value'])
+#        print "BBT Resource: ", resource, payload[resource]['value'], type(payload[resource]['value'])
         bclient.write('Borstahusen_data', resource, payload[resource]['value'])
-    
+    logging.debug("BeeBotte updated")    
 #    res1 = Resource(bclient, 'Borstahusen_data', 'Vindhastighet_medel')
 #    res1.write(11.0)
 ################################################################
@@ -54,39 +57,44 @@ def scrapeDataDog(config, update="False"):
                 allColumns = allRows[row].find_all('td', class_=value)
                 for column in range(len(allColumns)):
                     if allColumns[column].get_text()[0] != '#':
+                        logging.debug("Text:"+allColumns[column].get_text())
                         datan[row][value] = float(allColumns[column].get_text().split()[0].replace(',','.'))
+                        logging.debug("Datan:"+str(datan[row][value]))
                         datan[row]['enhet'] = allColumns[column].get_text().split()[1]
+                        logging.debug("Enhet:"+datan[row]['enhet'])
 
     for unit in datan:
-#        print "Unit: ", unit
         if config['borstahusenspir']['kollaDessaClasser']['storhetClassName'] in unit:
             for t, n in config['borstahusenspir']['typeName'].iteritems():
                 try:
                     payload[unit['Kol_tx_storhet'].replace(' ','_')+n] = {'value': unit[t], 'timestamp': timestamp, 'context': {'lat': 55.894468, 'lng': 12.799568}}
                 except (KeyError) as e:
-                    print "Fel DataDog:", e
-#    print json.dumps(payload)
+                    logging.info("Fel DataDog:"+str(e))
     if config['beebotte']['update'] == "True":
         if len(payload) != 0:
             beebotte_write(config, payload)
         else:
-            print "No data data collected for Beebotte."
+            logging.info("No data data collected for Beebotte.")
 
     if config['ubidots']['update'] == "True":
-#        print "Update Ubidots: ", update, type(update)
+        logging.debug("Updating UbiDots")
         if len(payload):
+            # Minska antalet varden till 10 sa det blir kostandsfritt hos Ubidots
+            for varde in ('Vatten_Temperatur_min', 'Vatten_Temperatur_max', 'Luft_Temperatur_min', 'Luft_Temperatur_max', 'Lufttryck_relativ_min', 'Lufttryck_relativ_max'):
+                if varde in payload:
+                    del payload[varde]
             rc = requests.post(config['ubidots']['urlprefix']+'/api/v1.6/devices/'+config['ubidots']['datadog_source']+'/?token='+config['ubidots']['token'], headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
-#            print rc
-            print rc.content
+            logging.debug(rc.content)
         else:
-            print "No dataDog data collected"
+            logging.info("No dataDog data collected")
     else:
-        print "payload: ", json.dumps(payload)
+        print("Payload: "+str(json.dumps(payload)))
 
 ################################################################
 
 def scrapeSMHI(config, update="False"):
 #    seaLevelLocations = {'Barseback': 2099, 'Viken': 2228, 'Klagshamn': 2095, 'Skanor': 30488}
+    logging.debug('Start av scrapeSMHI')
     vattenPayload = {}
     for key, value in config['smhi']['seaLevelLocations'].iteritems():
 
@@ -98,22 +106,29 @@ def scrapeSMHI(config, update="False"):
             vattenPayload[key+'_sea_level'] = {'value': responseData['value'][0]['value'], 'timestamp': responseData['value'][0]['date'], 'context': {'lat': responseData['position'][0]['latitude'], 'lng': responseData['position'][0]['longitude']}}
 
         except (ValueError) as e:
-            print "Fel SMHI:", e
-#    print json.dumps(vattenPayload)
-    if config['ubidots']['update'] == "True":
+            logging.info("Fel SMHI: "+str(e))
+    if config['ubidots']['update'] == "asdfasdfasdf":
         if len(vattenPayload) != 0:
             rc = requests.post(config['ubidots']['urlprefix']+'/api/v1.6/devices/'+config['ubidots']['smhi_source']+'/?token='+config['ubidots']['token'], headers={'Content-Type': 'application/json'}, data=json.dumps(vattenPayload))
-#            print rc
-            print rc.content
         else:
-            print "No SMHI data collected."
+            logging.info("No SMHI data collected.")
     else:
-        print json.dumps(vattenPayload)
+        print(json.dumps(vattenPayload))
 
 ###############################################################
 
 def lambda_handler(event, context):
+
+    ### Read configuration
     config = loadConfig(filename='config.yaml')
+
+    ### Set logging
+    logger = logging.getLogger()
+    numeric_level = getattr(logging, config['loglevel'].upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % loglevel)
+    logger.setLevel(numeric_level)
+
     scrapeDataDog(config)
     scrapeSMHI(config)
 
