@@ -34,8 +34,12 @@ def scrapeDataDog(config, update="False"):
     payload = {}
 #    kollaDessaClasser = {'storhetClassName': 'Kol_tx_storhet', 'medelClassName': 'Kol_tx_medel', 'minClassName': 'Kol_tx_mi', 'maxClassName': 'Kol_tx_ma'}
 #    typeName = {'Kol_tx_medel': '_medel', 'Kol_tx_mi': '_min', 'Kol_tx_ma': '_max'}
-
     response = requests.get(config['borstahusenspir']['url'])
+    soup = BeautifulSoup(response.content, 'html.parser')
+    new_url = soup.find("frame")["src"]
+    logging.info("Scraping %s", new_url)
+
+    response = requests.get(new_url)
     timestamp = int(time.time())*1000 # Milliseconds since 1970
 
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -69,7 +73,7 @@ def scrapeDataDog(config, update="False"):
                 try:
                     payload[unit['Kol_tx_storhet'].replace(' ','_')+n] = {'value': unit[t], 'timestamp': timestamp, 'context': {'lat': 55.894468, 'lng': 12.799568}}
                 except (KeyError) as e:
-                    logging.info("Fel DataDog:"+str(e))
+                    logging.warning("Fel DataDog:"+str(e))
     if config['beebotte']['update'] == "True":
         if len(payload) != 0:
             beebotte_write(config, payload)
@@ -77,14 +81,14 @@ def scrapeDataDog(config, update="False"):
             logging.info("No data data collected for Beebotte.")
 
     if config['ubidots']['update'] == "True":
-        logging.debug("Updating UbiDots")
+        logging.info("Updating UbiDots")
         if len(payload):
             # Minska antalet varden till 10 sa det blir kostandsfritt hos Ubidots
             for varde in ('Vatten_Temperatur_min', 'Vatten_Temperatur_max', 'Luft_Temperatur_min', 'Luft_Temperatur_max', 'Lufttryck_relativ_min', 'Lufttryck_relativ_max'):
                 if varde in payload:
                     del payload[varde]
             rc = requests.post(config['ubidots']['urlprefix']+'/api/v1.6/devices/'+config['ubidots']['datadog_source']+'/?token='+config['ubidots']['token'], headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
-            logging.debug(rc.content)
+            logging.info(rc.content)
         else:
             logging.info("No dataDog data collected")
     else:
@@ -130,7 +134,7 @@ def lambda_handler(event, context):
     logger.setLevel(numeric_level)
 
     scrapeDataDog(config)
-    scrapeSMHI(config)
+#    scrapeSMHI(config)
 
 if __name__ == '__main__':
     lambda_handler(False, False)

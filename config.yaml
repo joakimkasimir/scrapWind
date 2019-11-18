@@ -1,5 +1,5 @@
 ### Log levels: (less) CRITICAL, ERROR, WARNING, INFO, DEBUG (more)
-loglevel: WARNING
+loglevel: INFO
 
 beebotte:
         ### Set api key from your account
@@ -23,7 +23,7 @@ ubidots:
         update: 'True'
 
 borstahusenspir:
-        url: 'http://seadog.ddns.net:800/rapporter/BSS.htm'
+        url: 'http://xn--borstahusvder-kfb.se/'
         kollaDessaClasser:
                 storhetClassName: Kol_tx_storhet
                 medelClassName: Kol_tx_medel
