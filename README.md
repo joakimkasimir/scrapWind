@@ -50,11 +50,21 @@ bash deployLambda.sh scrapWind
 aws lambda create-function --region eu-west-1 --function-name scrapWind --zip-file fileb:///home/ec2-user/Code/scrapWind/scrapWind.zip --role arn:aws:iam::510136466810:role/Lambda1 --handler  scrapWind.lambda_handler --runtime python2.7 --timeout 300
 ```
 
-After the lambda is created you can updated like:
+### Create Lambda versioning ###
 ```bash
-bash deployLambda.sh scrapWind
+aws lambda create-alias --function-name "scrapWind" --name DEV --description "DEV alias pointing to LATEST" --function-version "\$LATEST"
+aws lambda publish-version --function-name "scrapWind"
+aws lambda create-alias --function-name "scrapWind" --name PROD --description "PROD alias pointing to 1" --function-version 1
 ```
 
+### Update code and version in Lambda ###
+```bash
+bash deployLambda.sh scrapWind
+aws lambda publish-version --function-name "scrapWind"
+aws lambda update-alias --function-name "scrapWind" --name PROD --function-version 2 # or what version you got from publish above
+```
+
+### Schedule execution
 Create a scheduler as in step 2 in http://docs.aws.amazon.com/AmazonCloudWatch/latest/events/RunLambdaSchedule.html 
 
 Now the AWS CloudWatch rule scheduler will trigger the lambda script 

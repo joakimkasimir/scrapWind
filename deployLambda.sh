@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+pythonVersion="python3.8"
 
 if [ -z ${VIRTUAL_ENV+x} ]; then
 	echo "No Python virtual environment set (VIRTUAL_ENV)"
@@ -10,9 +12,9 @@ tempDir=$(mktemp -d) && cd ${tempDir}
 
 # Copy files to temp directory
 cp ${VIRTUAL_ENV}/../${1}.py ${tempDir}
-cp ${VIRTUAL_ENV}/../config.yaml ${tempDir}
-cp -r ${VIRTUAL_ENV}/lib/python2.7/site-packages/* ${tempDir}
-cp -r ${VIRTUAL_ENV}/lib64/python2.7/site-packages/* ${tempDir}
+#cp ${VIRTUAL_ENV}/../config.yaml ${tempDir}
+cp -r ${VIRTUAL_ENV}/lib/${pythonVersion}/site-packages/* ${tempDir}
+cp -r ${VIRTUAL_ENV}/lib64/${pythonVersion}/site-packages/* ${tempDir}
 rm -rf ${tempDir}/pip*
 rm -rf ${tempDir}/pkg_resources
 rm -rf ${tempDir}/setuptools*

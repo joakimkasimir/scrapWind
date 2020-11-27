@@ -14,7 +14,7 @@ def loadConfig(filename='config.yaml'):
         content = fh.read()
     logging.debug("configuration: "+content)
 #    print 'yaml:', yaml.dump(yaml.load(content))
-    return yaml.load(content)
+    return yaml.load(content, Loader=yaml.FullLoader)
 
 ################################################################
 
@@ -52,7 +52,7 @@ def scrapeDataDog(config, update="False"):
     allRows = soup.find_all('tr')
     for row in range(len(allRows)):
         datan.append({})
-        for key, value in config['borstahusenspir']['kollaDessaClasser'].iteritems():
+        for key, value in config['borstahusenspir']['kollaDessaClasser'].items():
             if key == 'storhetClassName':
                 allColumns = allRows[row].find_all('td', class_=value)
                 for column in range(len(allColumns)):
@@ -69,7 +69,7 @@ def scrapeDataDog(config, update="False"):
 
     for unit in datan:
         if config['borstahusenspir']['kollaDessaClasser']['storhetClassName'] in unit:
-            for t, n in config['borstahusenspir']['typeName'].iteritems():
+            for t, n in config['borstahusenspir']['typeName'].items():
                 try:
                     payload[unit['Kol_tx_storhet'].replace(' ','_')+n] = {'value': unit[t], 'timestamp': timestamp, 'context': {'lat': 55.894468, 'lng': 12.799568}}
                 except (KeyError) as e:
