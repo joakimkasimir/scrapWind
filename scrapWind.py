@@ -8,6 +8,7 @@ import json
 import yaml
 from beebotte import *
 import logging
+import os
 
 def loadConfig(filename='config.yaml'):
     with open(filename) as fh:
@@ -132,6 +133,7 @@ def lambda_handler(event, context):
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % loglevel)
     logger.setLevel(numeric_level)
+    logging.info("AWS_LAMBDA_FUNCTION_VERSION: %s", os.environ.get('AWS_LAMBDA_FUNCTION_VERSION'))
 
     scrapeDataDog(config)
 #    scrapeSMHI(config)

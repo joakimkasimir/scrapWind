@@ -2,3 +2,4 @@
 *.zip
 env
 venv
+.config.yaml

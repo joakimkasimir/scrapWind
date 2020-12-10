@@ -26,6 +26,7 @@ deactivate
 Remove all security and credentials information from config.yaml
 Before you check in your code run:
 ```bash
+git restore config.yaml
 pip freeze > requirements.txt
 ```
 
